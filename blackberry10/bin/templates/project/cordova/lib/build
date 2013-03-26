@@ -72,6 +72,7 @@ function deployDebugToken(previous, baton) {
 
 function doDebugBuild() {
     built = true;
+    checkKeystorepass();
 
     //build in debug mode by default
     bbwpArgv.push("-d");
@@ -85,6 +86,7 @@ function doDebugBuild() {
 
 function doReleaseBuild() {
     built = true;
+    checkKeystorepass();
 
     //Note: Packager refers to signing password as "password" not "keystorepass"
     if (command["keystorepass"]) {
@@ -94,7 +96,7 @@ function doReleaseBuild() {
         bbwpArgv.push("--password");
         bbwpArgv.push( projectProperties.keystorepass);
     } else {
-        throw "No signing password provided. Please use --keystorepass via command-line or enter a value for keystorepass in project.json";
+        throw "No signing password provided. Please run keystorepass <password>";
     }
 
     copyArgIfExists("buildId");
@@ -132,6 +134,17 @@ function run() {
 
     //deploy app
     require("./run");
+}
+
+function checkKeystorepass() {
+    var target = projectProperties.targets[getTarget()] ? projectProperties.targets[getTarget()] : projectProperties.targets[projectProperties.defaultTarget];
+    if (!target) {
+        console.log("\nThe target does not exist, to add that target please run target add <name> <ip> <type> [-p <password>] [--pin <devicepin>]\n");
+        process.exit();
+    } else if ( target.type === "device" && !projectProperties.keystorepass && !command["keystorepass"] ) {
+        console.log("\nNo signing password provided. Please run keystorepass <password>\n");
+        process.exit();
+    }
 }
 
 command
